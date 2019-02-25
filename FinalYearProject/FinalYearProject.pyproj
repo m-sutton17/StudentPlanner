@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>e7dd45da-c114-46f4-b9e5-3a50cf377177</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MainMenuForm.py</StartupFile>
+    <StartupFile>ScheduleGenerationForm.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -32,13 +32,19 @@
     <InterpreterReference Include="IronPython|2.7-64" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActivityManagementForm.py">
+    <Compile Include="EventManagementForm.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MainMenuForm.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Scheduler.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TimetableInputForm.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="World.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

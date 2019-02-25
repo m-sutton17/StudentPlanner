@@ -1,7 +1,8 @@
 import clr
-from TimetableInputForm import TimetableInputForm
-from ActivityManagementForm import ActivityManagementForm
-from System import Array
+from TimetableInputForm import *
+from EventManagementForm import *
+from Scheduler import *
+from System import *
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
 
@@ -21,40 +22,46 @@ class ScheduleGenerationForm(Form):
         rows = 5
         
         # set up array with hard coded timetable
-        schedule = Array.CreateInstance(str, rows, columns)
+        timetable = Array.CreateInstance(str, rows, columns)
         # timetable cells
         # 1,0 1,1 1,2 1,5 1,6 1,7
         # 3,0 3,1 3,4 3,6
         # 4,4 4,5 4,6 4,7
-        schedule[1,0] = "O"
-        schedule[1,1] = "O"
-        schedule[1,2] = "O"
-        schedule[1,5] = "O"
-        schedule[1,6] = "O"
-        schedule[1,7] = "O"
-        schedule[3,0] = "O"
-        schedule[3,1] = "O"
-        schedule[3,4] = "O"
-        schedule[3,6] = "O"
-        schedule[4,4] = "O"
-        schedule[4,5] = "O"
-        schedule[4,6] = "O"
-        schedule[4,7] = "O"
+        timetable[1,0] = "tt1"
+        timetable[1,1] = "tt1"
+        timetable[1,2] = "tt1"
+        timetable[1,5] = "tt2"
+        timetable[1,6] = "tt2"
+        timetable[1,7] = "tt5"
+        timetable[3,0] = "tt3"
+        timetable[3,1] = "tt3"
+        timetable[3,4] = "tt4"
+        timetable[3,6] = "tt3"
+        timetable[4,4] = "tt5"
+        timetable[4,5] = "tt5"
+        timetable[4,6] = "tt6"
+        timetable[4,7] = "tt6"
+
+        # set up hardcoded events
+        events = [Event('gym', 'et1')]
 
         # set up grid
         self.grdSchedule.Columns.Clear()
         for i in range(columns):
              self.grdSchedule.Columns.Add("" ,"%s - %s" % (i+9, i+10))   # (i+9) + " - " + (i+10)
 
+        self.Scheduler = Scheduler()
+        self.Scheduler.setTimetable(timetable)
+        self.Scheduler.setEvents(events)
+
         # add array to grid
         row = Array.CreateInstance(str, columns)
         for x in range(rows):
             for y in range(columns):
-                row[y] = schedule[x,y]
+                row[y] = timetable[x,y]
 
             self.grdSchedule.Rows.Add(row)
         
-
 
     def initialiseControls(self):
         
@@ -117,7 +124,7 @@ class ScheduleGenerationForm(Form):
         self.btnGenerate = Button()
         self.btnGenerate.Text = 'Generate Schedules'
         self.btnGenerate.Location = Point(10, 50)
-        #self.btnGenerate.Click += self.buttonPressed
+        self.btnGenerate.Click += self.btnSchedulePress
         
         # timetables combobox
         self.cbxTimetables = ComboBox()
@@ -132,9 +139,9 @@ class ScheduleGenerationForm(Form):
         
         # open manage activities form button
         self.btnActivities = Button()
-        self.btnActivities.Text = 'Manage Activities'
+        self.btnActivities.Text = 'Manage Events'
         self.btnActivities.Location = Point(10, 450)
-        self.btnActivities.Click += self.btnActivitiesPress
+        self.btnActivities.Click += self.btnEventsPress
 
         # add controls to panel
         self.gridControlPanel.Controls.Add(self.btnGenerate)
@@ -148,24 +155,31 @@ class ScheduleGenerationForm(Form):
         
 
 # button events
+    def btnSchedulePress(self, sender, args):
+        self.grdSchedule.Rows.Clear()
+
+        self.schedule = self.Scheduler.GenerateSchedule()
+        
+        row = Array.CreateInstance(str, self.schedule.GetLength(1))
+        for x in range(self.schedule.GetLength(0)):
+            for y in range(self.schedule.GetLength(1)):
+                row[y] = self.schedule[x,y]
+
+            self.grdSchedule.Rows.Add(row)
+        pass
+
     def btnTimetablePress(self, sender, args):
-        #print 'The label *used to say* : %s' % self.label.Text
-        #print 'Button Pressed'
-        #self.lblTitle.Text = "You clicked the button."
         timetableForm = TimetableInputForm()
         timetableForm.Show()
         self.Hide()
 
-    def btnActivitiesPress(self, sender, args):
-        #print 'The label *used to say* : %s' % self.label.Text
-        #print 'Button Pressed'
-        #self.lblTitle.Text = "You clicked the button."
+    def btnEventsPress(self, sender, args):
         activitiesForm = ActivityManagementForm()
         activitiesForm.Show()
         self.Hide()
         
-#Application.EnableVisualStyles()
-#Application.SetCompatibleTextRenderingDefault(False)
+Application.EnableVisualStyles()
+Application.SetCompatibleTextRenderingDefault(False)
 
-#form = ScheduleGenerationForm()
-#Application.Run(form)
+form = ScheduleGenerationForm()
+Application.Run(form)
