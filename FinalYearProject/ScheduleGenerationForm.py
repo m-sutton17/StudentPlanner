@@ -1,13 +1,14 @@
 import clr
-from TimetableInputForm import *
-from EventManagementForm import *
-from Scheduler import *
-from System import *
+
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
 
 from System.Drawing import *
 from System.Windows.Forms import *
+from TimetableInputForm import *
+from EventManagementForm import *
+from Scheduler import *
+from System import *
 
 class ScheduleGenerationForm(Form):
    #initialisation
@@ -27,9 +28,8 @@ class ScheduleGenerationForm(Form):
         # 1,0 1,1 1,2 1,5 1,6 1,7
         # 3,0 3,1 3,4 3,6
         # 4,4 4,5 4,6 4,7
-        timetable[1,0] = "tt1"
-        timetable[1,1] = "tt1"
-        timetable[1,2] = "tt1"
+        timetable[0,0] = "tt1"
+        timetable[0,1] = "tt1"
         timetable[1,5] = "tt2"
         timetable[1,6] = "tt2"
         timetable[1,7] = "tt5"
@@ -43,16 +43,16 @@ class ScheduleGenerationForm(Form):
         timetable[4,7] = "tt6"
 
         # set up hardcoded events
-        events = [Event('gym', 'et1')]
+        self.events = [Event('gym', 'et1', ['monday'], 'morning'), Event('washing', 'et2', ['tuesday'], 'any')]
 
         # set up grid
         self.grdSchedule.Columns.Clear()
         for i in range(columns):
              self.grdSchedule.Columns.Add("" ,"%s - %s" % (i+9, i+10))   # (i+9) + " - " + (i+10)
 
-        self.Scheduler = Scheduler()
-        self.Scheduler.setTimetable(timetable)
-        self.Scheduler.setEvents(events)
+        self.scheduler = Scheduler()
+        self.scheduler.setTimetable(timetable)
+        self.scheduler.setEvents(self.events)
 
         # add array to grid
         row = Array.CreateInstance(str, columns)
@@ -158,7 +158,7 @@ class ScheduleGenerationForm(Form):
     def btnSchedulePress(self, sender, args):
         self.grdSchedule.Rows.Clear()
 
-        self.schedule = self.Scheduler.GenerateSchedule()
+        self.schedule = self.scheduler.GenerateSchedule()
         
         row = Array.CreateInstance(str, self.schedule.GetLength(1))
         for x in range(self.schedule.GetLength(0)):
@@ -166,7 +166,6 @@ class ScheduleGenerationForm(Form):
                 row[y] = self.schedule[x,y]
 
             self.grdSchedule.Rows.Add(row)
-        pass
 
     def btnTimetablePress(self, sender, args):
         timetableForm = TimetableInputForm()
@@ -174,12 +173,13 @@ class ScheduleGenerationForm(Form):
         self.Hide()
 
     def btnEventsPress(self, sender, args):
-        activitiesForm = ActivityManagementForm()
-        activitiesForm.Show()
+        eventsForm = EventManagementForm(self.events)
+        eventsForm.callerForm = self
+        eventsForm.Show()
         self.Hide()
         
-Application.EnableVisualStyles()
-Application.SetCompatibleTextRenderingDefault(False)
+#Application.EnableVisualStyles()
+#Application.SetCompatibleTextRenderingDefault(False)
 
-form = ScheduleGenerationForm()
-Application.Run(form)
+#form = ScheduleGenerationForm()
+#Application.Run(form)

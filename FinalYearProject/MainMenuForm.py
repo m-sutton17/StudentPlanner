@@ -1,10 +1,12 @@
 import clr
-from System import Array
+
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
 
 from System.Drawing import *
 from System.Windows.Forms import *
+from System import Array
+from ScheduleGenerationForm import *
 
 class MainMenuForm(Form):
     #initialisation
@@ -49,7 +51,8 @@ class MainMenuForm(Form):
         # schedule form button
         self.btnSchedule = Button()
         self.btnSchedule.Text = 'Schedule Generation'
-        self.btnSchedule.Location = Point(150, 200)
+        self.btnSchedule.Location = Point(150, 250)
+        self.btnSchedule.Click += self.btnSchedulePress
 
         # timetable form button
         self.btnTimetable = Button()
@@ -76,11 +79,16 @@ class MainMenuForm(Form):
 
         self.Controls.Add(self.mainPanel)
 
-        pass
 
+# button events
+    def btnSchedulePress(self, sender, args):
+        scheduleForm = ScheduleGenerationForm()
+        scheduleForm.callerForm = self
+        scheduleForm.Show()
+        self.Hide()
 
-Application.EnableVisualStyles()
-Application.SetCompatibleTextRenderingDefault(False)
+#Application.EnableVisualStyles()
+#Application.SetCompatibleTextRenderingDefault(False)
 
-form = MainMenuForm()
-Application.Run(form)
+#form = MainMenuForm()
+#Application.Run(form)

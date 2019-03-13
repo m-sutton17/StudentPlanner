@@ -7,18 +7,22 @@ class World(object):
          self.holding = Predicate('holding', 'eH')
          self.lowerRatio = Predicate('lowerRatio', 'none')
          self.occupiedRatio = Predicate('occupiedRatio', 0.0)
-         self.higherPriority = Predicate('higherPriority', 'eH')
-         self.meetsContraints = Predicate('meetsContraints', 'none')
+         self.higherPriority = Predicate('higherPriority', 'et')
+         self.meetsDayConstraints = Predicate('meetsDayConstraints', None)
+         self.meetsTimeConstraints = Predicate('meetsTimeConstraints', None)
+         self.suitableSlot = Predicate('suitableSlot', None)
          self.occupiedSlot = Predicate('occupiedSlot', None)
          self.at = Predicate('at', 'dx')
          self.cycle = Predicate('cycle', 1)
-         self.selection = Predicate('selection', 0)
+         self.selection = Predicate('selection', 't0')
         
-         self.events = events                # set of events
-         self.eventHeld = self.events[0]
-         self.eventIndex = 0
+         self.events = events           # set of events
+         self.eventIndex = 0                
+         self.eventHeld = self.events[self.eventIndex]
+         
          self.eventMax = len(events)
          self.day = 0
+         self.slot = 0
          self.dayORs = Array.CreateInstance(float, 5)
          self.scheduleSlots = [[],[]]       # tx - open time slots # ttx - timetable slots # etx - event time slots
 
@@ -47,24 +51,24 @@ class World(object):
 
         self.calculateOR()
 
-        actionPass = Action('pass', 0, [Predicate('at', 'dx'), Predicate('lowerRatio', 'or')], [Predicate('at', 'dx+1'), Predicate('holding', 'eH')])
-        actionFirstSlot = Action('firstSlot', 1, [Predicate('holding', 'eH'), Predicate('lowerRatio', 'dx'), Predicate('occupiedSlot', None)], [Predicate('lowerRatio', '')])
-        actionNextSlot = Action('nextSlot', 2, [Predicate('holding', 'eH'), Predicate('occupiedSlot', True), Predicate('higherPriority', 'et')], [Predicate('lowerRatio', '')])
-        actionReplaceEvent = Action('replaceEvent', 3, [Predicate('occupiedSlot', True), Predicate('higherPriority', 'eH')], [Predicate('holding', 'et')])
-        actionAddEvent = Action('addEvent', 4, [Predicate('occupiedSlot', False), Predicate('higherPriority', 'eH')], [Predicate('available', False)])
-        actionCycleEvent = Action('cycleEvent', 5, [Predicate('at', 'dn'), Predicate('holding', 'eH')], [Predicate('holding', 'ex+1'), Predicate('cycle', 1)])
-        actionAnalyseOptions = Action('analyseOptions', 6, [Predicate('at', 'dx'), Predicate('holding', 'eH'), Predicate('selection', -1)], [Predicate('LowerRatio', 'or')])
+        actionPass = Action('pass', 0, [Predicate('at', 'dx'), Predicate('suitableDay', False)], [Predicate('at', 'dx+1'), Predicate('holding', 'eH')])
+        actionFirstSlot = Action('firstSlot', 1, [Predicate('holding', 'eH'), Predicate('suitableDay', True), Predicate('occupiedSlot', None)], [Predicate('lowerRatio', '')])
+        actionNextSlot = Action('nextSlot', 2, [Predicate('holding', 'eH'), Predicate('suitableSlot', False), Predicate('higherPriority', 'et'), Predicate('selection', 'tx')], [Predicate('lowerRatio', '')])
+        actionReplaceEvent = Action('replaceEvent', 3, [Predicate('occupiedSlot', True), Predicate('higherPriority', 'eH'), Predicate('suitableSlot', True)], [Predicate('holding', 'et')])
+        actionAddEvent = Action('addEvent', 4, [Predicate('occupiedSlot', False), Predicate('suitableSlot', True)], [Predicate('available', False)])
+        actionCycleEvent = Action('cycleEvent', 5, [Predicate('at', 'dn'), Predicate('holding', 'eH'), Predicate('suitableDay', False)], [Predicate('holding', 'ex+1'), Predicate('cycle', 1)])
+        actionAnalyseOptions = Action('analyseOptions', 6, [Predicate('suitableDay', None), Predicate('holding', 'eH'), Predicate('selection', 't0')], [Predicate('LowerRatio', 'or')])
 
         self.actions = [actionPass, actionFirstSlot, actionNextSlot, actionReplaceEvent, actionAddEvent, actionCycleEvent, actionAnalyseOptions]
 
     def calculateOR(self):
         total = 0.0;
         for i in range(len(self.dayORs)):
-            print(self.dayORs[i])
+            print('cycle day ' + str(i) + ': ' + str(self.dayORs[i]))
             total = total + self.dayORs[i]
             
         self.occupiedRatio.value = total / len(self.dayORs)
-        print(self.occupiedRatio.value)
+        print('or: ' + str(self.occupiedRatio.value))
         
     def calculateDayOR(self, dayNum):
         occupiedCount = 0.0
@@ -79,9 +83,42 @@ class World(object):
 
         dayOR = occupiedCount / (freeCount + occupiedCount)
 
-        print(dayOR)
+        print('day ' + str(dayNum) + ': ' + str(dayOR))
 
         return dayOR
+
+    def setEventHeld(self):
+        self.holding.value = 'none'
+        startingIndex = self.eventIndex
+        self.eventIndex = self.eventIndex + 1
+        while (self.eventIndex != startingIndex):
+            if (self.eventIndex >= self.eventMax):
+                self.eventIndex = 0
+            else:
+                if (self.events[self.eventIndex].placed == False):
+                    self.eventHeld = self.events[self.eventIndex]
+                    self.holding.value = 'eH'
+                    break
+                else:
+                    self.eventIndex = self.eventIndex + 1
+
+    def getDayFromIndex(self, day):
+        # switch statement for day index
+         switcher = {
+         0: 'monday',
+         1: 'tuesday',
+         2: 'wednesday',
+         3: 'thursday',
+         4: 'friday',
+     }
+         dayName = switcher.get(day, lambda: "nothing")
+         return dayName
+
+    def getTimePeriod(self):
+        if self.slot < 3:
+            return 'morning'
+        elif self.slot >= 4:
+            return 'afternoon'
 
 
 

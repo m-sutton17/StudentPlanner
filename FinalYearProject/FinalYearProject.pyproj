@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>e7dd45da-c114-46f4-b9e5-3a50cf377177</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ScheduleGenerationForm.py</StartupFile>
+    <StartupFile>TimetableInputForm.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,7 +25,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="ScheduleGenerationForm.py" />
+    <Compile Include="ScheduleGenerationForm.py">
+      <Publish>True</Publish>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="IronPython|2.7-32" />

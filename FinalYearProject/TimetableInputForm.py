@@ -12,7 +12,13 @@ class TimetableInputForm(Form):
         self.Text = 'Timetable Input'
         self.Name = 'frmTimetableInput'
 
+        self.columns = 8
+        self.rows = 5
+        self.timetableArray = Array.CreateInstance(str, self.rows, self.columns)
+
         self.initialiseControls()
+
+        self.setUpGrid()
 
 
     def initialiseControls(self):
@@ -36,8 +42,10 @@ class TimetableInputForm(Form):
         # timetable data grid
         self.grdTimetable = DataGridView();
         self.grdTimetable.Location = Point(10, 45);
-        self.grdTimetable.Name = "grdGame";
+        self.grdTimetable.Name = "grdTimetable";
         self.grdTimetable.Size = Size(900, 600);
+        self.grdTimetable.MultiSelect = True;
+        self.grdTimetable.ReadOnly = True;
 
         # timetable combo box
         self.cbxTimetables = ComboBox()
@@ -65,7 +73,7 @@ class TimetableInputForm(Form):
         self.btnBack = Button()
         self.btnBack.Text = 'Return'
         self.btnBack.Location = Point(550, 660)
-        #self.button.Click += self.exitButtonPressed
+        self.btnBack.Click += self.exitButtonPressed
 
         # add controls
         self.mainPanel.Controls.Add(self.lblTitle)
@@ -121,6 +129,7 @@ class TimetableInputForm(Form):
         self.btnAddLessons.Text = "Add classes to selected slots"
         self.btnAddLessons.Location = Point(25, 130)
         self.btnAddLessons.Size = Size(200, 20)
+        self.btnAddLessons.Click += self.addLessonsPressed
 
         # add controls
         self.inputPanel.Controls.Add(self.lblClassName)
@@ -135,6 +144,63 @@ class TimetableInputForm(Form):
 
         self.Controls.Add(self.mainPanel)
 
+    def setUpGrid(self):
+
+        self.grdTimetable.Columns.Clear()
+        for i in range(self.columns):
+             self.grdTimetable.Columns.Add("" ,"%s - %s" % (i+9, i+10))   # (i+9) + " - " + (i+10)
+
+        row = Array.CreateInstance(str, self.columns)
+        rowNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+        for x in range(self.rows):
+            for y in range(self.columns):
+                row[y] = ''
+
+            self.grdTimetable.Rows.Add(row)
+            self.grdTimetable.Rows[x].HeaderCell.Value = rowNames[x]
+
+        
+
+    def updateGrid(self):
+        self.grdTimetable.Rows.Clear()
+
+        row = Array.CreateInstance(str, self.columns)
+        rowNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+        for x in range(self.rows):
+            for y in range(self.columns):
+                row[y] = self.timetableArray[x,y]
+
+            self.grdTimetable.Rows.Add(row)
+            self.grdTimetable.Rows[x].HeaderCell.Value = rowNames[x]
+        pass
+
+    def displaySavedTimetable(self):
+        pass
+
+# button events
+    def addLessonsPressed(self, sender, args):
+        for cell in self.grdTimetable.SelectedCells:
+            print('x: ' + str(cell.RowIndex) + ' y: ' + str(cell.ColumnIndex))
+            #cell.value = tbxClassName.Text
+            self.timetableArray[cell.RowIndex, cell.ColumnIndex] = self.tbxClassName.Text
+
+        self.updateGrid()
+
     def exitButtonPressed(self, sender, args):
         form.Show()
         self.Close()
+
+
+#class DGVMultiSelect (DataGridView):
+#     def __init__(self):
+#         pass
+
+
+#     def OnCellMouseDown(self, DataGridViewCellMouseEventArgs e):
+
+
+Application.EnableVisualStyles()
+Application.SetCompatibleTextRenderingDefault(False)
+
+form = TimetableInputForm()
+Application.Run(form)
