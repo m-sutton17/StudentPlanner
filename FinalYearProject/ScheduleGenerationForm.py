@@ -1,4 +1,5 @@
 import clr
+import sqlite3
 
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
@@ -19,48 +20,58 @@ class ScheduleGenerationForm(Form):
 
         self.initialiseControls()
 
-        columns = 8
-        rows = 5
+        self.callerForm = None
         
-        # set up array with hard coded timetable
-        timetable = Array.CreateInstance(str, rows, columns)
-        # timetable cells
-        # 1,0 1,1 1,2 1,5 1,6 1,7
-        # 3,0 3,1 3,4 3,6
-        # 4,4 4,5 4,6 4,7
-        timetable[0,0] = "tt1"
-        timetable[0,1] = "tt1"
-        timetable[1,5] = "tt2"
-        timetable[1,6] = "tt2"
-        timetable[1,7] = "tt5"
-        timetable[3,0] = "tt3"
-        timetable[3,1] = "tt3"
-        timetable[3,4] = "tt4"
-        timetable[3,6] = "tt3"
-        timetable[4,4] = "tt5"
-        timetable[4,5] = "tt5"
-        timetable[4,6] = "tt6"
-        timetable[4,7] = "tt6"
+        self.conn = sqlite3.connect("schedulerDatabase.db")
+        self.cursor = self.conn.cursor()
 
-        # set up hardcoded events
-        self.events = [Event('gym', 'et1', ['monday'], 'morning'), Event('washing', 'et2', ['tuesday'], 'any')]
+        self.columns = 8
+        self.rows = 5
+
+        self.timetables = []
+        self.fillTimetableList()
+        self.events = []
+        self.classes = []
+
+        # set up array with hard coded timetable
+        self.timetable = Array.CreateInstance(str, self.rows, self.columns)
+        # timetable cells
+        #timetable[0,0] = "tt1"
+        #timetable[0,1] = "tt1"
+        #timetable[1,5] = "tt2"
+        #timetable[1,6] = "tt2"
+        #timetable[1,7] = "tt5"
+        #timetable[3,0] = "tt3"
+        #timetable[3,1] = "tt3"
+        #timetable[3,4] = "tt4"
+        #timetable[3,6] = "tt3"
+        #timetable[4,4] = "tt5"
+        #timetable[4,5] = "tt5"
+        #timetable[4,6] = "tt6"
+        #timetable[4,7] = "tt6"
+
+        # set up hardcoded events/classes
+        #self.events = [EventSlot('gym', 'et1', ['monday'], 'morning'), EventSlot('washing', 'et2', ['tuesday'], 'any')]
+        #self.classes = [TimetableSlot('abc', 'tt1', 's1', 'dave'),TimetableSlot('def', 'tt2', 's2', 'chris'),TimetableSlot('ghi', 'tt3', 's3', 'hayley'),
+        #                TimetableSlot('jkl', 'tt4', 's4', 'annie'),TimetableSlot('mno', 'tt5', 's5', 'jake'),TimetableSlot('pqr', 'tt6', 's6', 'anthony')]
 
         # set up grid
         self.grdSchedule.Columns.Clear()
-        for i in range(columns):
-             self.grdSchedule.Columns.Add("" ,"%s - %s" % (i+9, i+10))   # (i+9) + " - " + (i+10)
+        for i in range(self.columns):
+             self.grdSchedule.Columns.Add("" ,"%s - %s" % (i+9, i+10))   
 
         self.scheduler = Scheduler()
-        self.scheduler.setTimetable(timetable)
-        self.scheduler.setEvents(self.events)
+        #self.scheduler.setTimetable()
+        #self.scheduler.setEvents()
 
         # add array to grid
-        row = Array.CreateInstance(str, columns)
-        for x in range(rows):
-            for y in range(columns):
-                row[y] = timetable[x,y]
+        # self.updateGrid(timetable)
+        #row = Array.CreateInstance(str, columns)
+        #for x in range(rows):
+        #    for y in range(columns):
+        #        row[y] = timetable[x,y]
 
-            self.grdSchedule.Rows.Add(row)
+        #    self.grdSchedule.Rows.Add(row)
         
 
     def initialiseControls(self):
@@ -84,23 +95,38 @@ class ScheduleGenerationForm(Form):
         # schedule grid data view
         self.grdSchedule = DataGridView();
         self.grdSchedule.Location = Point(10, 50);
-        self.grdSchedule.Name = "grdGame";
+        self.grdSchedule.Name = "grdSchedule";
         self.grdSchedule.Size = Size(900, 650);
+        self.grdSchedule.RowsDefaultCellStyle.WrapMode = DataGridViewTriState.True
+        self.grdSchedule.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells
+
+        # schedule name label
+        self.lblScheduleName = Label()
+        self.lblScheduleName.Text = "Schedule Name"
+        self.lblScheduleName.Location = Point(970, 580)
+        self.lblScheduleName.Size = Size(100, 20)
+        
+        # schedule name textbox
+        self.tbxScheduleName = TextBox()
+        self.tbxScheduleName.Location = Point(1070, 580)
+        self.tbxScheduleName.Size = Size(150, 20);
 
         # save button
         self.btnSave = Button()
         self.btnSave.Text = 'Save Changes'
-        self.btnSave.Location = Point(1000, 600)
-        #self.btnSave.Click += self.buttonPressed
+        self.btnSave.Location = Point(1000, 650)
+        self.btnSave.Click += self.saveSchedulePressed
 
         # back button
         self.btnBack = Button()
         self.btnBack.Text = 'Back To Menu'
-        self.btnBack.Location = Point(1150, 600)
-        #self.btnBack.Click += self.buttonPressed
+        self.btnBack.Location = Point(1150, 650)
+        self.btnBack.Click += self.btnExitPress
 
         # add controls to panel
         self.mainPanel.Controls.Add(self.lblTitle)
+        self.mainPanel.Controls.Add(self.lblScheduleName)
+        self.mainPanel.Controls.Add(self.tbxScheduleName)
         self.mainPanel.Controls.Add(self.btnSave)
         self.mainPanel.Controls.Add(self.btnBack)
         self.mainPanel.Controls.Add(self.grdSchedule)
@@ -130,6 +156,7 @@ class ScheduleGenerationForm(Form):
         self.cbxTimetables = ComboBox()
         self.cbxTimetables.DropDownStyle = ComboBoxStyle.DropDownList;
         self.cbxTimetables.Location = Point(10, 250)
+        self.cbxTimetables.SelectedIndexChanged += self.timetableSelectionChanged
 
         # open manage timetables form button
         self.btnTimetable = Button()
@@ -154,21 +181,160 @@ class ScheduleGenerationForm(Form):
         self.Controls.Add(self.mainPanel)
         
 
-# button events
+    def updateGrid(self, data):
+        self.grdSchedule.Rows.Clear()
+        
+        rowNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+        for x in range(self.rows):
+            row = Array.CreateInstance(str, self.columns)
+            for y in range(self.columns):
+                if (data[x,y]):
+                    if ('tt' in data[x,y]):
+                        timeSlot = self.retrieveClassSlot(data[x,y])
+                        if (timeSlot):
+                            row[y] = timeSlot.printSlot()
+                    elif ('et' in data[x,y]):
+                        timeSlot = self.retrieveEventSlot(data[x,y])
+                        if (timeSlot):
+                            row[y] = timeSlot.printSlot()
+                    else:
+                        row[y] = ''
+                else:
+                    row[y] = ''
+
+            self.grdSchedule.Rows.Add(row)
+            self.grdSchedule.Rows[x].HeaderCell.Value = rowNames[x]
+
+
+    def retrieveClassSlot(self, code):
+        for timetableClass in self.classes:
+            if (timetableClass.code == code):
+                return timetableClass
+
+    def retrieveEventSlot(self, code):
+        for event in self.events:
+            if (event.code == code):
+                return event
+
+    def fillTimetableList(self):
+        sql = "SELECT code, name FROM TimetableSchedules"
+        self.cursor.execute(sql)
+        results = self.cursor.fetchall()
+        self.cbxTimetables.Items.Clear()
+        for row in results:
+            self.timetables.Add(row[0])
+            self.cbxTimetables.Items.Add(row[1])
+    
+    def displaySavedTimetable(self, index):
+        self.classes.Clear()
+        timetable = self.timetables[index]
+        
+        # retrieve timetable
+        sql = "SELECT * FROM TimetableSchedules WHERE code = '" + timetable + "'"
+        self.cursor.execute(sql)
+        result = self.cursor.fetchone()
+
+        offset = 2
+        i = 0
+        for x in range(self.rows):
+            for y in range(self.columns):
+                index = i + offset
+                
+                if (result[index] != ""):
+                    if self.checkForClass(result[index]):
+                        pass
+                    else:
+                        self.classes.Add(self.getClassFromDB(result[index]))
+                        self.timetable[x,y] = result[index]
+                else:
+                    self.timetable[x,y] = None
+                
+                i = i + 1
+
+        self.updateGrid(self.timetable)
+
+    def checkForClass(self, code):
+        
+        for timetableClass in self.classes:
+            if (timetableClass == code):
+                return True
+
+        return False
+
+    def getClassFromDB(self, code):
+        sql = "SELECT * FROM ScheduleClasses WHERE code = '" + code + "'"
+        self.cursor.execute(sql)
+        result = self.cursor.fetchone()
+
+        return TimetableSlot(result[1], result[0], result[2], result[3])
+
+    def generateScheduleCode(self):
+        index = 1
+        prefix = 'fs'
+
+        sql = "SELECT code FROM FullSchedules"
+        self.cursor.execute(sql)
+        results = self.cursor.fetchall()
+
+        free = False
+        while free == False:
+            found = False
+            for row in results:
+                if (prefix + str(index) == row[0]):
+                    found = True
+
+
+            if (found == False):
+                free = True
+            else:
+                index = index + 1
+
+        return prefix + str(index)
+
+
+    def convertSlotsToSQL(self):
+        sql = ''
+        for x in range(self.rows):
+            for y in range(self.columns):
+                if (self.schedule[x,y]):
+                    sql = sql + "'" + self.schedule[x,y] + "',"
+                else:
+                    sql = sql + "'',"
+
+        return sql[:-1]
+
+# UI events
     def btnSchedulePress(self, sender, args):
         self.grdSchedule.Rows.Clear()
 
         self.schedule = self.scheduler.GenerateSchedule()
         
-        row = Array.CreateInstance(str, self.schedule.GetLength(1))
-        for x in range(self.schedule.GetLength(0)):
-            for y in range(self.schedule.GetLength(1)):
-                row[y] = self.schedule[x,y]
+        self.updateGrid(self.schedule)
+        #row = Array.CreateInstance(str, self.schedule.GetLength(1))
+        #for x in range(self.schedule.GetLength(0)):
+        #    for y in range(self.schedule.GetLength(1)):
+        #        row[y] = self.schedule[x,y]
 
-            self.grdSchedule.Rows.Add(row)
+        #    self.grdSchedule.Rows.Add(row)
+
+    def saveSchedulePressed(self, sender, args):
+        code = self.generateScheduleCode()
+        name = self.tbxScheduleName.Text
+        sql = """
+                INSERT INTO FullSchedules
+                VALUES ('""" + str(code) + "','" + str(name) + "'," + self.convertSlotsToSQL() + ")"
+              
+        self.cursor.execute(sql)
+        self.conn.commit()
+        self.fillTimetableList()
+
+    def timetableSelectionChanged(self, sender, args):
+        self.displaySavedTimetable(self.cbxTimetables.SelectedIndex)
+        self.scheduler.setTimetable(self.timetable)
 
     def btnTimetablePress(self, sender, args):
         timetableForm = TimetableInputForm()
+        timetableForm.callerForm = self
         timetableForm.Show()
         self.Hide()
 
@@ -177,6 +343,11 @@ class ScheduleGenerationForm(Form):
         eventsForm.callerForm = self
         eventsForm.Show()
         self.Hide()
+
+    def btnExitPress(self, sender, args):
+        self.conn.close()
+        self.callerForm.Show()
+        self.Close()
         
 #Application.EnableVisualStyles()
 #Application.SetCompatibleTextRenderingDefault(False)

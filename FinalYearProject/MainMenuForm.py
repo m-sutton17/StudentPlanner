@@ -1,4 +1,5 @@
 import clr
+import sqlite3
 
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
@@ -7,6 +8,8 @@ from System.Drawing import *
 from System.Windows.Forms import *
 from System import Array
 from ScheduleGenerationForm import *
+from TimetableInputForm import *
+from ScheduleDisplayForm import *
 
 class MainMenuForm(Form):
     #initialisation
@@ -15,6 +18,8 @@ class MainMenuForm(Form):
         self.Name = 'frmMainMenu'
         
         self.initialiseControls()
+
+        self.initialiseDB()
 
 
     def initialiseControls(self):
@@ -58,11 +63,13 @@ class MainMenuForm(Form):
         self.btnTimetable = Button()
         self.btnTimetable.Text = 'Timetable Input'
         self.btnTimetable.Location = Point(150, 350)
+        self.btnTimetable.Click += self.btnTimetablePress
 
         # view schedule form button
         self.btnViewSchedule = Button()
         self.btnViewSchedule.Text = 'View Schedule'
         self.btnViewSchedule.Location = Point(150, 500)
+        self.btnViewSchedule.Click += self.btnDisplayPress
 
         # exit button
         self.btnExit = Button()
@@ -79,6 +86,49 @@ class MainMenuForm(Form):
 
         self.Controls.Add(self.mainPanel)
 
+    def initialiseDB(self):
+        # connect to db
+        conn = sqlite3.connect("schedulerDatabase.db")
+        cursor = conn.cursor()
+        
+        # create tables if they dont exist
+        sql = """
+                CREATE TABLE IF NOT EXISTS FullSchedules 
+                (code text PRIMARY KEY,name text,""" + self.insertTableLength() + ")"
+        cursor.execute(sql)
+
+        sql = """
+                CREATE TABLE IF NOT EXISTS TimetableSchedules 
+                (code text PRIMARY KEY,name text,""" + self.insertTableLength() + ")"
+        cursor.execute(sql)
+        
+        sql= """
+                CREATE TABLE IF NOT EXISTS ScheduleClasses 
+                (code text PRIMARY KEY,name text,room text,teacher text);
+             """
+        cursor.execute(sql)
+        
+        sql= """
+                CREATE TABLE IF NOT EXISTS ScheduleEvents 
+                (code text PRIMARY KEY,name text,days text,time text);
+             """
+        cursor.execute(sql)
+        
+        conn.commit()
+        # close connection to db
+        conn.close()
+
+    def insertTableLength(self):
+        rows = 5
+        columns = 8
+        sql = ""
+        for i in range(rows * columns):
+            if (i == (rows * columns) - 1):
+                sql = sql + "slot" + str(i) + " text"
+            else:
+                sql = sql + "slot" + str(i) + " text,"
+
+        return sql
 
 # button events
     def btnSchedulePress(self, sender, args):
@@ -87,8 +137,20 @@ class MainMenuForm(Form):
         scheduleForm.Show()
         self.Hide()
 
-#Application.EnableVisualStyles()
-#Application.SetCompatibleTextRenderingDefault(False)
+    def btnTimetablePress(self, sender, args):
+        timetableForm = TimetableInputForm()
+        timetableForm.callerForm = self
+        timetableForm.Show()
+        self.Hide()
 
-#form = MainMenuForm()
-#Application.Run(form)
+    def btnDisplayPress(self, sender, args):
+        displayForm = ScheduleDisplayForm()
+        displayForm.callerForm = self
+        displayForm.Show()
+        self.Hide()
+
+Application.EnableVisualStyles()
+Application.SetCompatibleTextRenderingDefault(False)
+
+form = MainMenuForm()
+Application.Run(form)

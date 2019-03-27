@@ -1,4 +1,5 @@
 import clr
+import sqlite3
 from System import Array
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
@@ -6,7 +7,7 @@ clr.AddReference('System.Windows.Forms')
 from System.Drawing import *
 from System.Windows.Forms import *
 #from ScheduleGenerationForm import *
-from Scheduler import Event
+from Scheduler import EventSlot
 
 class EventManagementForm(Form):
     #initialisation
@@ -22,6 +23,9 @@ class EventManagementForm(Form):
         self.initialiseControls()
 
         self.displayEvents()
+
+        self.conn = sqlite3.connect("schedulerDatabase.db")
+        self.cursor = self.conn.cursor()
 
     def initialiseControls(self):
 
@@ -215,10 +219,10 @@ class EventManagementForm(Form):
             print('nothing selected')
 
     def btnExitPress(self, sender, args):
+        self.conn.close()
         self.callerForm.scheduler.setEvents(self.events)
         self.callerForm.Show()
         self.Close()
-        pass
 
 # methods
     def addEvent(self):
@@ -259,10 +263,17 @@ class EventManagementForm(Form):
             invalidReason = 'No time selected'
 
         if (invalidReason == 'none'):
+            newEventRecord = EventSlot(name, self.generateEventCode(), days, time)
             if (self.inputMode == 'add'):
-                self.events.append(Event(name, self.generateEventCode(), days, time))
+                #newEvent = Event(name, self.generateEventCode(), days, time)
+                self.events.append(newEventRecord)
+                #self.addEventToDB(newEvent)
             elif (self.inputMode == 'edit' and self.editingIndex != -1):
-                self.events[self.editingIndex] = Event(name, self.generateEventCode(), days, time)
+                #editEvent = Event(name, self.generateEventCode(), days, time)
+                self.events[self.editingIndex] = newEventRecord
+                #self.editEventDBEntry(editEvent)
+            
+            self.addEventToDB(newEventRecord)
             self.displayEvents()
         else:
             print(invalidReason)
@@ -271,11 +282,18 @@ class EventManagementForm(Form):
         index = 1
         prefix = 'et'
 
+        sql = "SELECT code FROM ScheduleEvents"
+        self.cursor.execute(sql)
+        results = self.cursor.fetchall()
+
         free = False
         while free == False:
             found = False
-            for event in self.events:
-                if (prefix + str(index) == event.code):
+            #for event in self.events:
+            #    if (prefix + str(index) == event.code):
+            #        found = True
+            for row in results:
+                if (prefix + str(index) == row[0]):
                     found = True
 
             if (found == False):
@@ -318,6 +336,15 @@ class EventManagementForm(Form):
         self.cbThursday.Checked = False
         self.cbFriday.Checked = False
         self.cbxEventTime.SelectedIndex = -1
+
+    def addEventToDB(self, newEvent):
+        sql = """
+                INSERT INTO ScheduleEvents
+                VALUES ('""" + str(newEvent.code) + "','" + str(newEvent.name) + "','" + str(newEvent.printDays()) + "','" + str(newEvent.time) + "')"
+              
+        self.cursor.execute(sql)
+        self.conn.commit()
+
 
 #Application.EnableVisualStyles()
 #Application.SetCompatibleTextRenderingDefault(False)

@@ -1,10 +1,13 @@
 import clr
+import sqlite3
 from System import Array
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
 
 from System.Drawing import *
 from System.Windows.Forms import *
+
+from Scheduler import TimetableSlot
 
 
 class TimetableInputForm(Form):
@@ -15,11 +18,19 @@ class TimetableInputForm(Form):
         self.columns = 8
         self.rows = 5
         self.timetableArray = Array.CreateInstance(str, self.rows, self.columns)
+        self.classes = []
+        self.timetables = []
+
+        self.callerForm = None
 
         self.initialiseControls()
 
         self.setUpGrid()
 
+        self.conn = sqlite3.connect("schedulerDatabase.db")
+        self.cursor = self.conn.cursor()
+
+        self.fillTimetableList()
 
     def initialiseControls(self):
         
@@ -46,12 +57,15 @@ class TimetableInputForm(Form):
         self.grdTimetable.Size = Size(900, 600);
         self.grdTimetable.MultiSelect = True;
         self.grdTimetable.ReadOnly = True;
+        self.grdTimetable.RowsDefaultCellStyle.WrapMode = DataGridViewTriState.True
+        self.grdTimetable.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells
 
         # timetable combo box
         self.cbxTimetables = ComboBox()
         self.cbxTimetables.DropDownStyle = ComboBoxStyle.DropDownList;
         self.cbxTimetables.Location = Point(950, 50)
         self.cbxTimetables.Size = Size(280, 50);
+        self.cbxTimetables.SelectedIndexChanged += self.timetableSelectionChanged
 
         # timetable name label
         self.lblTTName = Label()
@@ -68,6 +82,7 @@ class TimetableInputForm(Form):
         self.btnAddTimetable = Button()
         self.btnAddTimetable.Text = 'Add TimeTable'
         self.btnAddTimetable.Location = Point(1000, 120)
+        self.btnAddTimetable.Click += self.saveTimetablePressed
 
         # back button
         self.btnBack = Button()
@@ -89,7 +104,7 @@ class TimetableInputForm(Form):
         self.inputPanel.ForeColor = Color.Blue
         self.inputPanel.BackColor = Color.Gray
         self.inputPanel.Location = Point(930, 327)
-        self.inputPanel.Size = Size(300, 300)
+        self.inputPanel.Size = Size(325, 300)
 
         # class name label
         self.lblClassName = Label()
@@ -99,7 +114,7 @@ class TimetableInputForm(Form):
 
         # class name textbox
         self.tbxClassName = TextBox()
-        self.tbxClassName.Location = Point(50, 10)
+        self.tbxClassName.Location = Point(150, 10)
         self.tbxClassName.Size = Size(150, 20);
 
         # class room label
@@ -110,7 +125,7 @@ class TimetableInputForm(Form):
         
         # class room textbox
         self.tbxClassRoom = TextBox()
-        self.tbxClassRoom.Location = Point(50, 50)
+        self.tbxClassRoom.Location = Point(150, 50)
         self.tbxClassRoom.Size = Size(150, 20);
 
         # class teacher label
@@ -121,7 +136,7 @@ class TimetableInputForm(Form):
         
         # class teacher textbox
         self.tbxClassTeacher = TextBox()
-        self.tbxClassTeacher.Location = Point(50, 90)
+        self.tbxClassTeacher.Location = Point(150, 90)
         self.tbxClassTeacher.Size = Size(150, 20);
 
         # add lessons button
@@ -163,31 +178,192 @@ class TimetableInputForm(Form):
 
     def updateGrid(self):
         self.grdTimetable.Rows.Clear()
-
-        row = Array.CreateInstance(str, self.columns)
+        
         rowNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
         for x in range(self.rows):
+            row = Array.CreateInstance(str, self.columns)
             for y in range(self.columns):
-                row[y] = self.timetableArray[x,y]
+                classSlot = self.retrieveClassSlot(self.timetableArray[x,y])
+                if (classSlot):
+                    row[y] = classSlot.printSlot()
 
             self.grdTimetable.Rows.Add(row)
             self.grdTimetable.Rows[x].HeaderCell.Value = rowNames[x]
-        pass
 
-    def displaySavedTimetable(self):
-        pass
+    def displaySavedTimetable(self, index):
+        self.classes.Clear()
+        timetable = self.timetables[index]
+        
+        # retrieve timetable
+        sql = "SELECT * FROM TimetableSchedules WHERE code = '" + timetable + "'"
+        self.cursor.execute(sql)
+        result = self.cursor.fetchone()
 
-# button events
-    def addLessonsPressed(self, sender, args):
-        for cell in self.grdTimetable.SelectedCells:
-            print('x: ' + str(cell.RowIndex) + ' y: ' + str(cell.ColumnIndex))
-            #cell.value = tbxClassName.Text
-            self.timetableArray[cell.RowIndex, cell.ColumnIndex] = self.tbxClassName.Text
+        offset = 2
+        i = 0
+        for x in range(self.rows):
+            for y in range(self.columns):
+                index = i + offset
+                
+                if (result[index] != ""):
+                    if self.checkForClass(result[index]):
+                        pass
+                    else:
+                        self.classes.Add(self.getClassFromDB(result[index]))
+                        self.timetableArray[x,y] = result[index]
+                else:
+                    self.timetableArray[x,y] = ""
+                
+                i = i + 1
 
         self.updateGrid()
 
+    def generateClassCode(self):
+        index = 1
+        prefix = 'tt'
+
+        sql = "SELECT code FROM ScheduleClasses"
+        self.cursor.execute(sql)
+        results = self.cursor.fetchall()
+
+        free = False
+        while free == False:
+            found = False
+            for row in results:
+                if (prefix + str(index) == row[0]):
+                    found = True
+
+            if (found == False):
+                free = True
+            else:
+                index = index + 1
+
+        return prefix + str(index)
+
+    def generateTimetableCode(self):
+        index = 1
+        prefix = 'tts'
+
+        sql = "SELECT code FROM TimetableSchedules"
+        self.cursor.execute(sql)
+        results = self.cursor.fetchall()
+
+        free = False
+        while free == False:
+            found = False
+            for row in results:
+                if (prefix + str(index) == row[0]):
+                    found = True
+
+
+            if (found == False):
+                free = True
+            else:
+                index = index + 1
+
+        return prefix + str(index)
+
+    def retrieveClassSlot(self, code):
+        for timetableClass in self.classes:
+            if (timetableClass.code == code):
+                return timetableClass
+
+    def checkForClass(self, code):
+        
+        for timetableClass in self.classes:
+            if (timetableClass == code):
+                return True
+
+        return False
+
+    def convertSlotsToSQL(self):
+        sql = ''
+        for x in range(self.rows):
+            for y in range(self.columns):
+                if (self.timetableArray[x,y]):
+                    sql = sql + "'" + self.timetableArray[x,y] + "',"
+                else:
+                    sql = sql + "'',"
+
+        return sql[:-1]
+       
+    def saveClassToDB(self, timetableClass):
+        sql = """
+                INSERT INTO ScheduleClasses
+                VALUES ('""" + str(timetableClass.code) + "','" + str(timetableClass.name) + "','" + str(timetableClass.room) + "','" + str(timetableClass.teacher) + "')"
+              
+        self.cursor.execute(sql)
+        self.conn.commit()
+
+    def getClassFromDB(self, code):
+        sql = "SELECT * FROM ScheduleClasses WHERE code = '" + code + "'"
+        self.cursor.execute(sql)
+        result = self.cursor.fetchone()
+
+        return TimetableSlot(result[1], result[0], result[2], result[3])
+        
+    def fillTimetableList(self):
+        sql = "SELECT code, name FROM TimetableSchedules"
+        self.cursor.execute(sql)
+        results = self.cursor.fetchall()
+        self.cbxTimetables.Items.Clear()
+        for row in results:
+            self.timetables.Add(row[0])
+            self.cbxTimetables.Items.Add(row[1])
+        
+
+# UI events
+    def addLessonsPressed(self, sender, args):
+        valid = True
+        if (self.tbxClassName.Text):
+            name = self.tbxClassName.Text
+        else:
+            # not valid
+            valid = False
+        if (self.tbxClassRoom.Text):
+            room = self.tbxClassRoom.Text
+        else:
+            # not valid
+            valid = False
+        if (self.tbxClassTeacher.Text):
+            teacher = self.tbxClassTeacher.Text
+        else:
+            # not valid
+            valid = False
+
+        
+        if (valid):
+            timetableClass = TimetableSlot(name, self.generateClassCode(), room, teacher)
+            self.classes.Add(timetableClass)
+            self.saveClassToDB(timetableClass)
+
+            for cell in self.grdTimetable.SelectedCells:
+                print('x: ' + str(cell.RowIndex) + ' y: ' + str(cell.ColumnIndex))
+                self.timetableArray[cell.RowIndex, cell.ColumnIndex] = timetableClass.code
+
+            self.updateGrid()
+
+        else:
+            print('invalid')
+
+    def saveTimetablePressed(self, sender, args):
+        code = self.generateTimetableCode()
+        name = self.tbxTTName.Text
+        sql = """
+                INSERT INTO TimetableSchedules
+                VALUES ('""" + str(code) + "','" + str(name) + "'," + self.convertSlotsToSQL() + ")"
+              
+        self.cursor.execute(sql)
+        self.conn.commit()
+        self.fillTimetableList()
+
+    def timetableSelectionChanged(self, sender, args):
+        self.displaySavedTimetable(self.cbxTimetables.SelectedIndex)
+
     def exitButtonPressed(self, sender, args):
-        form.Show()
+        #self.callerForm.scheduler.setTimetable(self.timetableArray)
+        self.conn.close()
+        self.callerForm.Show()
         self.Close()
 
 
@@ -199,8 +375,8 @@ class TimetableInputForm(Form):
 #     def OnCellMouseDown(self, DataGridViewCellMouseEventArgs e):
 
 
-Application.EnableVisualStyles()
-Application.SetCompatibleTextRenderingDefault(False)
+#Application.EnableVisualStyles()
+#Application.SetCompatibleTextRenderingDefault(False)
 
-form = TimetableInputForm()
-Application.Run(form)
+#form = TimetableInputForm()
+#Application.Run(form)

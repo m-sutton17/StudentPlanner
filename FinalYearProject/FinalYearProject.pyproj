@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>e7dd45da-c114-46f4-b9e5-3a50cf377177</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>TimetableInputForm.py</StartupFile>
+    <StartupFile>MainMenuForm.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,6 +25,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ScheduleDisplayForm.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ScheduleGenerationForm.py">
       <Publish>True</Publish>
     </Compile>

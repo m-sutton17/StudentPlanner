@@ -116,9 +116,9 @@ class World(object):
 
     def getTimePeriod(self):
         if self.slot < 3:
-            return 'morning'
+            return 'Morning'
         elif self.slot >= 4:
-            return 'afternoon'
+            return 'Afternoon'
 
 
 

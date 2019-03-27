@@ -8,7 +8,6 @@ class Scheduler(object):
          self.world = None
          self.dayLimit = 4
          self.restrictionLevel = 0
-         pass
 
      def GenerateSchedule(self):
          self.world = World(self.events, self.timetable)
@@ -23,17 +22,13 @@ class Scheduler(object):
                      if self.checkState():
                         self.world.goalAchieved = True
                      break
-
-
+         
+         
          return self.world.scheduleSlots
 
      def setEvents(self, newEvents):
          self.events.Clear()
          self.events.extend(newEvents)
-         
-         #for i in range(len(newEvents)):
-             
-         #    self.events[i] = newEvents[i]
              
 
      def setTimetable(self, newTimetable):
@@ -45,6 +40,7 @@ class Scheduler(object):
                 if (newTimetable[x,y] != None):         # 'tt' in newTimetable[x,y]
                     self.timetable[x,y] = newTimetable[x,y]
 
+     
      def checkState(self):
          for event in self.world.events:
              if event.placed == False:
@@ -122,7 +118,6 @@ class Scheduler(object):
      }
          func = switcher.get(action, lambda: "nothing")
          return func()
-         pass
 
 # actions
      def AnalyseOptions(self):
@@ -185,23 +180,27 @@ class Scheduler(object):
             elif 'et' in self.world.scheduleSlots[self.world.day, self.world.slot]:
                 #self.world.higherPriority.value = 'et'
                 self.world.occupiedSlot.value = True
+            
+            # check constraints
+            self.world.meetsTimeConstraints.value = self.CheckTimeConstraints(self.world.eventHeld)
+
+            # set suitability based on other predicates
+            if (self.world.occupiedSlot.value == False and self.world.meetsTimeConstraints.value == True):
+                self.world.suitableSlot.value = True
+            else:
+                self.world.suitableSlot.value = False
 
          else:
+            # reset values to reflect next day
             self.world.slot = 0
             self.world.day = self.world.day + 1
             if (self.world.day == self.dayLimit) :
                 self.world.at.value = 'dn'
-            self.occupiedSlot = None
+            self.world.occupiedSlot.value = None
             self.world.selection.value = 't0'
-         
-         # check constraints
-         self.world.meetsTimeConstraints.value = self.CheckTimeConstraints(self.world.eventHeld)
-
-         # set suitability based on other predicates
-         if (self.world.occupiedSlot.value == False and self.world.meetsTimeConstraints.value == True):
-             self.world.suitableSlot.value = True
-         else:
-             self.world.suitableSlot.value = False
+            self.world.meetsTimeConstraints.value = None
+            self.world.suitableSlot.value = None
+            self.world.meetsDayConstraints.value = None
          
      
      def ReplaceEvent(self):
@@ -269,16 +268,19 @@ class Scheduler(object):
          return True
 
      def CheckDayConstraints(self, event):
-         found = False
+         valid = False
          for day in event.days:
              if day == self.world.getDayFromIndex(self.world.day):
-                 found = True
+                 valid = True
                  break
          
-         return found
+         if (self.world.lowerRatio.value == 'or' and self.restrictionLevel == 0):
+             valid = False
+
+         return valid
 
      def CheckTimeConstraints(self, event):
-         if event.time == 'any':
+         if event.time == 'Any':
              pass
          elif event.time != self.world.getTimePeriod():
              return False
@@ -286,12 +288,36 @@ class Scheduler(object):
          return True
 
 
-class Event(object):
-
-    def __init__(self, name, code, days, time):
+class TimeSlot(object):
+    def __init__(self, name, code):
         self.name = name
         self.code = code
+        
+    def printSlot(self):
+        return self.name
+
+class EventSlot(TimeSlot):
+
+    def __init__(self, name, code, days, time):
+        TimeSlot.__init__(self, name, code)
         self.days = days
         self.time = time
         self.holding = False
         self.placed = False
+
+    def printDays(self):
+        output = ''
+        for day in self.days:
+            output = output + day + ","
+
+        return output[:-1]
+
+
+class TimetableSlot(TimeSlot):
+    def __init__(self, name, code, room, teacher):
+        TimeSlot.__init__(self, name, code)
+        self.room = room
+        self.teacher = teacher
+
+    def printSlot(self):
+        return TimeSlot.printSlot(self) + '\n' + self.room + '\n' + self.teacher
