@@ -83,7 +83,7 @@ class ScheduleDisplayForm(Form):
         self.btnExport = Button()
         self.btnExport.Text = 'Export Schedule'
         self.btnExport.Location = Point(35, 350)
-        #self.btnBack.Click += self.buttonPressed
+        self.btnExport.Click += self.btnExportPress
 
         # back button
         self.btnBack = Button()
@@ -203,6 +203,21 @@ class ScheduleDisplayForm(Form):
         self.conn.close()
         self.callerForm.Show()
         self.Close()
+
+    def btnExportPress(self, sender, args):
+        bm = Bitmap(self.grdSchedule.Bounds.Width, self.grdSchedule.Bounds.Height)
+        self.grdSchedule.DrawToBitmap(bm, Rectangle(1,1,self.grdSchedule.Width, self.grdSchedule.Height))
+        
+        dialog = SaveFileDialog()
+        dialog.Title = 'Save Schedule as Image'
+        dialog.Filter = 'Image Files(*.JPG)|*.JPG'
+
+        if dialog.ShowDialog() == DialogResult.OK:
+            try:
+                bm.Save(dialog.FileName, Drawing.Imaging.ImageFormat.Jpeg)
+            except IOError, e:
+                print 'An error occured: ', e
+
 
     def scheduleSelectionChanged(self, sender, args):
         self.displaySavedSchedule(self.cbxSchedules.SelectedIndex)

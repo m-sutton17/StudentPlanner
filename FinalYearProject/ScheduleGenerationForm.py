@@ -97,6 +97,7 @@ class ScheduleGenerationForm(Form):
         self.grdSchedule.Location = Point(10, 50);
         self.grdSchedule.Name = "grdSchedule";
         self.grdSchedule.Size = Size(900, 650);
+        self.grdSchedule.ReadOnly = True;
         self.grdSchedule.RowsDefaultCellStyle.WrapMode = DataGridViewTriState.True
         self.grdSchedule.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells
 

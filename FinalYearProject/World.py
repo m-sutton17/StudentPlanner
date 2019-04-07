@@ -16,6 +16,7 @@ class World(object):
          self.cycle = Predicate('cycle', 1)
          self.selection = Predicate('selection', 't0')
         
+         # initiate variables
          self.events = events           # set of events
          self.eventIndex = 0                
          self.eventHeld = self.events[self.eventIndex]
