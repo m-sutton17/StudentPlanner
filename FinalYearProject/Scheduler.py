@@ -220,6 +220,7 @@ class Scheduler(object):
      def AddEvent(self):
          # add event to slot
          self.world.scheduleSlots[self.world.day, self.world.slot] = self.world.eventHeld.code
+         print(str(self.world.eventHeld.name) + " added")
          # adjust dayOR
          self.world.dayORs[self.world.day] = self.world.calculateDayOR(self.world.day)
          # adjust or
@@ -241,16 +242,24 @@ class Scheduler(object):
          self.world.at.value = 'dx'
          # increase cycle number
          self.world.cycle.value = self.world.cycle.value + 1
+         # alter restriction level if appropriate
+         if (self.world.cycle.value == len(self.world.events) * 2):
+             print("restriction lowered")
+             self.restrictionLevel = self.restrictionLevel + 1
          # change index for next event
-         if (self.world.eventIndex + 1 == len(self.world.events)):
-            self.world.eventIndex = 0
-            self.restrictionLevel = self.restrictionLevel + 1
-         else:
-            self.world.eventIndex = self.world.eventIndex + 1
+         #if (self.world.eventIndex + 1 == len(self.world.events) * 2):
+         #   self.world.eventIndex = 0
+         #   self.restrictionLevel = self.restrictionLevel + 1
+         #else:
+         #   self.world.eventIndex = self.world.eventIndex + 1
          # cycle the event held
-         self.world.eventHeld = self.world.events[self.world.eventIndex]
+         self.world.setEventHeld()
          # move to start of week
          self.world.day = 0
+         self.world.selection.value = 't0'
+         self.world.slot = 0
+         self.world.suitableSlot.value = None
+         self.world.meetsDayConstraints.value = None
 
 
      def CheckConstraints(self):

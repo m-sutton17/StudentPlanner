@@ -1,8 +1,11 @@
 import clr
-import sqlite3
+
 from System import Array
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
+clr.AddReference("IronPython.SQLite")
+
+import sqlite3
 
 from System.Drawing import *
 from System.Windows.Forms import *
@@ -32,52 +35,71 @@ class EventManagementForm(Form):
         self.ClientSize = Size(1280, 720);
         self.FormBorderStyle = FormBorderStyle.FixedDialog
 
+        buttonFont = Font("Open Sans", 14)
+        buttonSmallFont = Font("Open Sans", 10)
+        titleFont = Font("Open Sans", 18)
+        textFont = Font("Open Sans", 9)
 
         ## main controls
         self.mainPanel = Panel()
-        self.mainPanel.ForeColor = Color.Blue
-        self.mainPanel.BackColor = Color.LightSlateGray
+        self.mainPanel.ForeColor = Color.Black
+        self.mainPanel.BackColor = Color.FromArgb(161, 162, 163)
         self.mainPanel.Location = Point(0, 0)
         self.mainPanel.Size = Size(1280, 720)
 
         # title label
         self.lblTitle = Label()
         self.lblTitle.Text = "Event Management"
-        self.lblTitle.Location = Point(0, 15)
-        self.lblTitle.Size = Size(1280, 20)
+        self.lblTitle.Location = Point(10, 5)
+        self.lblTitle.Size = Size(1280, 40)
+        self.lblTitle.Font = titleFont
 
         # activities title label
         self.lblEventTitle = Label()
         self.lblEventTitle.Text = "Events"
         self.lblEventTitle.Location = Point(700, 45)
         self.lblEventTitle.Size = Size(600, 20)
+        self.lblEventTitle.Font = textFont
 
         # activities list box
         self.lbxEvents = ListBox()
         self.lbxEvents.Location = Point(700, 75)
         self.lbxEvents.Size = Size(300, 570)
+        self.lbxEvents.Font = textFont
 
         # new event button
         self.btnNew = Button()
         self.btnNew.Text = 'Add New Event'
-        self.btnNew.Location = Point(1100, 200)
+        self.btnNew.Location = Point(1050, 150)
+        self.btnNew.Size = Size(175, 50)
+        self.btnNew.Font = buttonFont
+        self.btnNew.BackColor = Color.FromArgb(0, 99, 160)
         self.btnNew.Click += self.btnNewPress
 
         # edit button
         self.btnEdit = Button()
         self.btnEdit.Text = 'Edit Event'
-        self.btnEdit.Location = Point(1100, 300)
+        self.btnEdit.Location = Point(1050, 300)
+        self.btnEdit.Size = Size(175, 50)
+        self.btnEdit.Font = buttonFont
+        self.btnEdit.BackColor = Color.FromArgb(0, 99, 160)
         self.btnEdit.Click += self.btnEditPress
         
         # remove button
         self.btnRemove = Button()
         self.btnRemove.Text = 'Remove Event'
-        self.btnRemove.Location = Point(1100, 400)
+        self.btnRemove.Location = Point(1050, 450)
+        self.btnRemove.Size = Size(175, 50)
+        self.btnRemove.Font = buttonFont
+        self.btnRemove.BackColor = Color.FromArgb(0, 99, 160)
 
         # back button
         self.btnBack = Button()
         self.btnBack.Text = 'Back'
-        self.btnBack.Location = Point(550, 675)
+        self.btnBack.Location = Point(480, 660)
+        self.btnBack.Size = Size(400, 50)
+        self.btnBack.Font = buttonFont
+        self.btnBack.BackColor = Color.FromArgb(0, 99, 160)
         self.btnBack.Click += self.btnExitPress
 
         # add controls to panel
@@ -91,61 +113,70 @@ class EventManagementForm(Form):
 
         ## sub panel for input controls
         self.inputPanel = Panel()
-        self.inputPanel.ForeColor = Color.Blue
-        self.inputPanel.BackColor = Color.Gray
-        self.inputPanel.Location = Point(15, 45)
+        self.inputPanel.ForeColor = Color.Black
+        self.inputPanel.BackColor = Color.FromArgb(226, 226, 226)
+        self.inputPanel.Location = Point(25, 45)
         self.inputPanel.Size = Size(600, 600)
 
         # editing mode label
         self.lblEditingMode = Label()
         self.lblEditingMode.Text = "Adding new event"
-        self.lblEditingMode.Location = Point(10, 20)
-        self.lblEditingMode.Size = Size(100, 20)
+        self.lblEditingMode.Location = Point(475, 5)
+        self.lblEditingMode.Size = Size(150, 20)
+        self.lblEditingMode.Font = textFont
 
         # event name label
         self.lblEventName = Label()
         self.lblEventName.Text = "Name"
-        self.lblEventName.Location = Point(10, 50)
+        self.lblEventName.Location = Point(25, 50)
         self.lblEventName.Size = Size(100, 20)
+        self.lblEventName.Font = textFont
         
         # event name textbox
         self.tbxEventName = TextBox()
         self.tbxEventName.Location = Point(210, 50)
         self.tbxEventName.Size = Size(150, 20);
+        self.tbxEventName.Font = textFont
 
         # event days label
         self.lblEventDays = Label()
         self.lblEventDays.Text = "Days"
-        self.lblEventDays.Location = Point(10, 200)
+        self.lblEventDays.Location = Point(25, 200)
         self.lblEventDays.Size = Size(100, 20)
+        self.lblEventDays.Font = textFont
 
         ## event days checkbox panel
         self.daysPanel = Panel()
-        self.daysPanel.ForeColor = Color.Blue
-        self.daysPanel.BackColor = Color.LightGray
+        self.daysPanel.ForeColor = Color.Black
+        self.daysPanel.BackColor = Color.FromArgb(125, 169, 196)
         self.daysPanel.Location = Point(220, 150)
         self.daysPanel.Size = Size(300, 175)
         # event days checkboxes
         self.cbMonday = CheckBox()      #mon
         self.cbMonday.Text = "Monday"
-        self.cbMonday.Location = Point(5, 5)
+        self.cbMonday.Location = Point(20, 15)
         self.cbMonday.Size = Size(350, 20)
+        self.cbMonday.Font = textFont
         self.cbTuesday = CheckBox()     #tue
         self.cbTuesday.Text = "Tuesday"
-        self.cbTuesday.Location = Point(5, 30)
+        self.cbTuesday.Location = Point(20, 45)
         self.cbTuesday.Size = Size(350, 20)
+        self.cbTuesday.Font = textFont
         self.cbWednesday = CheckBox()     #wed
         self.cbWednesday.Text = "Wednesday"
-        self.cbWednesday.Location = Point(5, 55)
+        self.cbWednesday.Location = Point(20, 75)
         self.cbWednesday.Size = Size(350, 20)
+        self.cbWednesday.Font = textFont
         self.cbThursday = CheckBox()     #thur
         self.cbThursday.Text = "Thursday"
-        self.cbThursday.Location = Point(5, 80)
+        self.cbThursday.Location = Point(20, 105)
         self.cbThursday.Size = Size(350, 20)
+        self.cbThursday.Font = textFont
         self.cbFriday = CheckBox()     #fri
         self.cbFriday.Text = "Friday"
-        self.cbFriday.Location = Point(5, 105)
+        self.cbFriday.Location = Point(20, 135)
         self.cbFriday.Size = Size(350, 20)
+        self.cbFriday.Font = textFont
 
         self.daysPanel.Controls.Add(self.cbMonday)
         self.daysPanel.Controls.Add(self.cbTuesday)
@@ -156,14 +187,17 @@ class EventManagementForm(Form):
         # event time label
         self.lblEventTime = Label()
         self.lblEventTime.Text = "Time"
-        self.lblEventTime.Location = Point(10, 370)
+        self.lblEventTime.Location = Point(25, 390)
         self.lblEventTime.Size = Size(100, 20)
+        self.lblEventTime.Font = textFont
 
         # event time combobox
         self.cbxEventTime = ComboBox()
         self.cbxEventTime.DropDownStyle = ComboBoxStyle.DropDownList;
-        self.cbxEventTime.Location = Point(220, 370)
+        self.cbxEventTime.Location = Point(220, 390)
         self.cbxEventTime.Size = Size(280, 20);
+        self.cbxEventTime.Font = textFont
+        self.cbxEventTime.BackColor = Color.White
         self.cbxEventTime.Items.Add('Any')
         self.cbxEventTime.Items.Add('Morning')
         self.cbxEventTime.Items.Add('Afternoon')
@@ -171,13 +205,19 @@ class EventManagementForm(Form):
         # event add button
         self.btnAddEvent = Button()
         self.btnAddEvent.Text = 'Add Event'
-        self.btnAddEvent.Location = Point(50, 450)
+        self.btnAddEvent.Location = Point(75, 475)
+        self.btnAddEvent.Size = Size(200, 60)
+        self.btnAddEvent.Font = buttonFont
+        self.btnAddEvent.BackColor = Color.FromArgb(0, 99, 160)
         self.btnAddEvent.Click += self.btnAddPress
         
         # event clear button
         self.btnClearEvent = Button()
         self.btnClearEvent.Text = 'Clear'
-        self.btnClearEvent.Location = Point(250, 450)
+        self.btnClearEvent.Location = Point(325, 475)
+        self.btnClearEvent.Size = Size(200, 60)
+        self.btnClearEvent.Font = buttonFont
+        self.btnClearEvent.BackColor = Color.FromArgb(0, 99, 160)
         self.btnClearEvent.Click += self.btnClearPress
 
         # add contros to panel
@@ -189,6 +229,7 @@ class EventManagementForm(Form):
         self.inputPanel.Controls.Add(self.cbxEventTime)
         self.inputPanel.Controls.Add(self.btnAddEvent)
         self.inputPanel.Controls.Add(self.btnClearEvent)
+        self.inputPanel.Controls.Add(self.lblEditingMode)
 
         # add subpanel
         self.mainPanel.Controls.Add(self.inputPanel)
@@ -205,6 +246,7 @@ class EventManagementForm(Form):
 
     def btnNewPress(self, sender, args):
         self.btnAddEvent.Text = 'Add Event'
+        self.lblEditingMode.Text = 'Adding new event'
         self.inputMode = 'add'
         self.editingIndex = -1
         self.clearInputControls()
@@ -212,6 +254,7 @@ class EventManagementForm(Form):
     def btnEditPress(self, sender, args):
         if (self.lbxEvents.SelectedIndex != -1):
             self.btnAddEvent.Text = 'Update Event'
+            self.lblEditingMode.Text = 'Editing existing event'
             self.inputMode = 'edit'
             self.editingIndex = self.lbxEvents.SelectedIndex
             self.displaySelectedEvent(self.lbxEvents.SelectedIndex)

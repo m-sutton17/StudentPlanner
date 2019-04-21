@@ -1,8 +1,11 @@
 import clr
-import sqlite3
+
 from System import Array
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
+clr.AddReference("IronPython.SQLite")
+
+import sqlite3
 
 from System.Drawing import *
 from System.Windows.Forms import *
@@ -37,18 +40,24 @@ class TimetableInputForm(Form):
         self.ClientSize = Size(1280, 720);
         self.FormBorderStyle = FormBorderStyle.FixedDialog
 
+        buttonFont = Font("Open Sans", 14)
+        buttonSmallFont = Font("Open Sans", 10)
+        titleFont = Font("Open Sans", 18)
+        textFont = Font("Open Sans", 9)
+
         ## main controls
         self.mainPanel = Panel()
-        self.mainPanel.ForeColor = Color.Blue
-        self.mainPanel.BackColor = Color.LightSlateGray
+        self.mainPanel.ForeColor = Color.Black
+        self.mainPanel.BackColor = Color.FromArgb(161, 162, 163)
         self.mainPanel.Location = Point(0, 0)
         self.mainPanel.Size = Size(1280, 720)
 
         # title label
         self.lblTitle = Label()
         self.lblTitle.Text = "Timetable Input"
-        self.lblTitle.Location = Point(10, 15)
-        self.lblTitle.Size = Size(1280, 20)
+        self.lblTitle.Location = Point(10, 5)
+        self.lblTitle.Size = Size(1280, 40)
+        self.lblTitle.Font = titleFont
 
         # timetable data grid
         self.grdTimetable = DataGridView();
@@ -65,29 +74,39 @@ class TimetableInputForm(Form):
         self.cbxTimetables.DropDownStyle = ComboBoxStyle.DropDownList;
         self.cbxTimetables.Location = Point(950, 50)
         self.cbxTimetables.Size = Size(280, 50);
+        self.cbxTimetables.Font = textFont
+        self.cbxTimetables.BackColor = Color.White
         self.cbxTimetables.SelectedIndexChanged += self.timetableSelectionChanged
 
         # timetable name label
         self.lblTTName = Label()
         self.lblTTName.Text = "Name"
-        self.lblTTName.Location = Point(950, 85)
+        self.lblTTName.Location = Point(950, 125)
         self.lblTTName.Size = Size(100, 20)
+        self.lblTTName.Font = textFont
 
         # timetable name text box
         self.tbxTTName = TextBox()
-        self.tbxTTName.Location = Point(1050, 85)
+        self.tbxTTName.Location = Point(1050, 125)
         self.tbxTTName.Size = Size(200, 20)
+        self.tbxTTName.Font = textFont
 
         # add timetable button
         self.btnAddTimetable = Button()
         self.btnAddTimetable.Text = 'Add TimeTable'
-        self.btnAddTimetable.Location = Point(1000, 120)
+        self.btnAddTimetable.Location = Point(1000, 200)
+        self.btnAddTimetable.Size = Size(200, 50)
+        self.btnAddTimetable.Font = buttonFont
+        self.btnAddTimetable.BackColor = Color.FromArgb(0, 99, 160)
         self.btnAddTimetable.Click += self.saveTimetablePressed
 
         # back button
         self.btnBack = Button()
         self.btnBack.Text = 'Return'
-        self.btnBack.Location = Point(550, 660)
+        self.btnBack.Location = Point(500, 660)
+        self.btnBack.Size = Size(400, 50)
+        self.btnBack.Font = buttonFont
+        self.btnBack.BackColor = Color.FromArgb(0, 99, 160)
         self.btnBack.Click += self.exitButtonPressed
 
         # add controls
@@ -101,8 +120,8 @@ class TimetableInputForm(Form):
 
         ## input controls
         self.inputPanel = Panel()
-        self.inputPanel.ForeColor = Color.Blue
-        self.inputPanel.BackColor = Color.Gray
+        self.inputPanel.ForeColor = Color.Black
+        self.inputPanel.BackColor = Color.FromArgb(226, 226, 226)
         self.inputPanel.Location = Point(930, 327)
         self.inputPanel.Size = Size(325, 300)
 
@@ -111,39 +130,47 @@ class TimetableInputForm(Form):
         self.lblClassName.Text = "Name"
         self.lblClassName.Location = Point(10, 10)
         self.lblClassName.Size = Size(100, 20)
+        self.lblClassName.Font = textFont
 
         # class name textbox
         self.tbxClassName = TextBox()
         self.tbxClassName.Location = Point(150, 10)
         self.tbxClassName.Size = Size(150, 20);
+        self.tbxClassName.Font = textFont
 
         # class room label
         self.lblClassRoom = Label()
         self.lblClassRoom.Text = "Room"
-        self.lblClassRoom.Location = Point(10, 50)
+        self.lblClassRoom.Location = Point(10, 85)
         self.lblClassRoom.Size = Size(100, 20)
+        self.lblClassRoom.Font = textFont
         
         # class room textbox
         self.tbxClassRoom = TextBox()
-        self.tbxClassRoom.Location = Point(150, 50)
+        self.tbxClassRoom.Location = Point(150, 85)
         self.tbxClassRoom.Size = Size(150, 20);
+        self.tbxClassRoom.Font = textFont
 
         # class teacher label
         self.lblClassTeacher = Label()
         self.lblClassTeacher.Text = "Teacher/Lecturer"
-        self.lblClassTeacher.Location = Point(10, 90)
+        self.lblClassTeacher.Location = Point(10, 160)
         self.lblClassTeacher.Size = Size(100, 20)
+        self.lblClassTeacher.Font = textFont
         
         # class teacher textbox
         self.tbxClassTeacher = TextBox()
-        self.tbxClassTeacher.Location = Point(150, 90)
+        self.tbxClassTeacher.Location = Point(150, 160)
         self.tbxClassTeacher.Size = Size(150, 20);
+        self.tbxClassTeacher.Font = textFont
 
         # add lessons button
         self.btnAddLessons = Button()
         self.btnAddLessons.Text = "Add classes to selected slots"
-        self.btnAddLessons.Location = Point(25, 130)
-        self.btnAddLessons.Size = Size(200, 20)
+        self.btnAddLessons.Location = Point(55, 210)
+        self.btnAddLessons.Size = Size(200, 60)
+        self.btnAddLessons.Font = buttonFont
+        self.btnAddLessons.BackColor = Color.FromArgb(0, 99, 160)
         self.btnAddLessons.Click += self.addLessonsPressed
 
         # add controls
@@ -173,8 +200,17 @@ class TimetableInputForm(Form):
 
             self.grdTimetable.Rows.Add(row)
             self.grdTimetable.Rows[x].HeaderCell.Value = rowNames[x]
-
         
+        self.grdTimetable.Font = Font("Open Sans", 8)
+        self.grdTimetable.RowHeadersWidth = 95
+        self.grdTimetable.ColumnHeadersHeight = 75
+        self.grdTimetable.RowTemplate.MinimumHeight = 100
+        self.grdTimetable.RowTemplate.Height = 100
+        style = DataGridViewCellStyle()
+        style.Font = Font("Open Sans", 15)
+        self.grdTimetable.ColumnHeadersDefaultCellStyle = style
+
+        self.updateGrid()
 
     def updateGrid(self):
         self.grdTimetable.Rows.Clear()
@@ -189,6 +225,9 @@ class TimetableInputForm(Form):
 
             self.grdTimetable.Rows.Add(row)
             self.grdTimetable.Rows[x].HeaderCell.Value = rowNames[x]
+            style = DataGridViewCellStyle()
+            style.Font = Font("Open Sans", 10)
+            self.grdTimetable.Rows[x].DefaultCellStyle = style
 
     def displaySavedTimetable(self, index):
         self.classes.Clear()

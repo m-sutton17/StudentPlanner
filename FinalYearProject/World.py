@@ -99,9 +99,13 @@ class World(object):
                 if (self.events[self.eventIndex].placed == False):
                     self.eventHeld = self.events[self.eventIndex]
                     self.holding.value = 'eH'
+                    print(str(self.eventHeld.name) + " held")
                     break
                 else:
                     self.eventIndex = self.eventIndex + 1
+
+        if (startingIndex == self.eventIndex) :
+             self.holding.value = 'eH'
 
     def getDayFromIndex(self, day):
         # switch statement for day index

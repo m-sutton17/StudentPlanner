@@ -1,8 +1,11 @@
 import clr
-import sqlite3
+
 
 clr.AddReference('System.Drawing')
 clr.AddReference('System.Windows.Forms')
+clr.AddReference("IronPython.SQLite")
+
+import sqlite3
 
 from System.Drawing import *
 from System.Windows.Forms import *
@@ -56,9 +59,10 @@ class ScheduleGenerationForm(Form):
         #                TimetableSlot('jkl', 'tt4', 's4', 'annie'),TimetableSlot('mno', 'tt5', 's5', 'jake'),TimetableSlot('pqr', 'tt6', 's6', 'anthony')]
 
         # set up grid
-        self.grdSchedule.Columns.Clear()
-        for i in range(self.columns):
-             self.grdSchedule.Columns.Add("" ,"%s - %s" % (i+9, i+10))   
+        self.setUpGrid()
+        #self.grdSchedule.Columns.Clear()
+        #for i in range(self.columns):
+        #     self.grdSchedule.Columns.Add("" ,"%s - %s" % (i+9, i+10))   
 
         self.scheduler = Scheduler()
         #self.scheduler.setTimetable()
@@ -79,10 +83,15 @@ class ScheduleGenerationForm(Form):
         self.ClientSize = Size(1280, 720);
         self.FormBorderStyle = FormBorderStyle.FixedDialog
 
+        buttonFont = Font("Open Sans", 14)
+        buttonSmallFont = Font("Open Sans", 10)
+        titleFont = Font("Open Sans", 18)
+        textFont = Font("Open Sans", 9)
+
         ## main controls
         self.mainPanel = Panel()
-        self.mainPanel.ForeColor = Color.Blue
-        self.mainPanel.BackColor = Color.LightSlateGray
+        self.mainPanel.ForeColor =  Color.Black
+        self.mainPanel.BackColor = Color.FromArgb(161, 162, 163)
         self.mainPanel.Location = Point(0, 0)
         self.mainPanel.Size = Size(1280, 720)
 
@@ -90,7 +99,8 @@ class ScheduleGenerationForm(Form):
         self.lblTitle = Label()
         self.lblTitle.Text = "Schedule Generation"
         self.lblTitle.Location = Point(10, 10)
-        self.lblTitle.Size = Size(900, 35);
+        self.lblTitle.Size = Size(900, 35)
+        self.lblTitle.Font = titleFont
         
         # schedule grid data view
         self.grdSchedule = DataGridView();
@@ -106,6 +116,7 @@ class ScheduleGenerationForm(Form):
         self.lblScheduleName.Text = "Schedule Name"
         self.lblScheduleName.Location = Point(970, 580)
         self.lblScheduleName.Size = Size(100, 20)
+        self.lblScheduleName.Font = textFont
         
         # schedule name textbox
         self.tbxScheduleName = TextBox()
@@ -115,13 +126,19 @@ class ScheduleGenerationForm(Form):
         # save button
         self.btnSave = Button()
         self.btnSave.Text = 'Save Changes'
-        self.btnSave.Location = Point(1000, 650)
+        self.btnSave.Location = Point(975, 625)
+        self.btnSave.Size = Size(100, 60)
+        self.btnSave.Font = buttonSmallFont
+        self.btnSave.BackColor = Color.FromArgb(0, 99, 160)
         self.btnSave.Click += self.saveSchedulePressed
 
         # back button
         self.btnBack = Button()
         self.btnBack.Text = 'Back To Menu'
-        self.btnBack.Location = Point(1150, 650)
+        self.btnBack.Location = Point(1125, 625)
+        self.btnBack.Size = Size(100, 60)
+        self.btnBack.Font = buttonSmallFont
+        self.btnBack.BackColor = Color.FromArgb(0, 99, 160)
         self.btnBack.Click += self.btnExitPress
 
         # add controls to panel
@@ -139,36 +156,49 @@ class ScheduleGenerationForm(Form):
         self.lblGridControlTitle.Text = "Schedule Management"
         self.lblGridControlTitle.Location = Point(960, 15)
         self.lblGridControlTitle.Size = Size(290, 20)
+        self.lblGridControlTitle.Font = textFont
         self.mainPanel.Controls.Add(self.lblGridControlTitle)
 
         self.gridControlPanel = Panel()
-        self.gridControlPanel.ForeColor = Color.Blue
-        self.gridControlPanel.BackColor = Color.Gray
+        self.gridControlPanel.ForeColor = Color.Black
+        self.gridControlPanel.BackColor = Color.FromArgb(226, 226, 226)
         self.gridControlPanel.Location = Point(950, 35)
         self.gridControlPanel.Size = Size(300, 500);
         
         # generate schedule button
         self.btnGenerate = Button()
-        self.btnGenerate.Text = 'Generate Schedules'
-        self.btnGenerate.Location = Point(10, 50)
+        self.btnGenerate.Text = 'Generate Schedule'
+        self.btnGenerate.Location = Point(45, 50)
+        self.btnGenerate.Size = Size(225, 60)
+        self.btnGenerate.Font = buttonFont
+        self.btnGenerate.BackColor = Color.FromArgb(0, 99, 160)
         self.btnGenerate.Click += self.btnSchedulePress
         
         # timetables combobox
         self.cbxTimetables = ComboBox()
         self.cbxTimetables.DropDownStyle = ComboBoxStyle.DropDownList;
-        self.cbxTimetables.Location = Point(10, 250)
+        self.cbxTimetables.Location = Point(10, 375)
+        self.cbxTimetables.Size = Size(150, 25)
+        self.cbxTimetables.Font = textFont
+        self.cbxTimetables.BackColor = Color.White
         self.cbxTimetables.SelectedIndexChanged += self.timetableSelectionChanged
 
         # open manage timetables form button
         self.btnTimetable = Button()
         self.btnTimetable.Text = 'Manage Timetables'
-        self.btnTimetable.Location = Point(200, 250)
+        self.btnTimetable.Location = Point(175, 350)
+        self.btnTimetable.Size = Size(120, 75)
+        self.btnTimetable.Font = buttonFont
+        self.btnTimetable.BackColor = Color.FromArgb(0, 99, 160)
         self.btnTimetable.Click += self.btnTimetablePress
         
         # open manage activities form button
         self.btnActivities = Button()
         self.btnActivities.Text = 'Manage Events'
-        self.btnActivities.Location = Point(10, 450)
+        self.btnActivities.Location = Point(45, 200)
+        self.btnActivities.Size = Size(225, 60)
+        self.btnActivities.Font = buttonFont
+        self.btnActivities.BackColor = Color.FromArgb(0, 99, 160)
         self.btnActivities.Click += self.btnEventsPress
 
         # add controls to panel
@@ -181,6 +211,31 @@ class ScheduleGenerationForm(Form):
         self.mainPanel.Controls.Add(self.gridControlPanel)
         self.Controls.Add(self.mainPanel)
         
+    def setUpGrid(self):
+
+        self.grdSchedule.Columns.Clear()
+        for i in range(self.columns):
+             self.grdSchedule.Columns.Add("" ,"%s - %s" % (i+9, i+10))   # (i+9) + " - " + (i+10)
+
+        row = Array.CreateInstance(str, self.columns)
+        rowNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+        for x in range(self.rows):
+            for y in range(self.columns):
+                row[y] = ''
+
+            self.grdSchedule.Rows.Add(row)
+            self.grdSchedule.Rows[x].HeaderCell.Value = rowNames[x]
+        
+        self.grdSchedule.Font = Font("Open Sans", 8)
+        self.grdSchedule.RowHeadersWidth = 95
+        self.grdSchedule.ColumnHeadersHeight = 75
+        self.grdSchedule.RowTemplate.MinimumHeight = 100
+        self.grdSchedule.RowTemplate.Height = 100
+        style = DataGridViewCellStyle()
+        style.Font = Font("Open Sans", 15)
+        self.grdSchedule.ColumnHeadersDefaultCellStyle = style
+
+        self.updateGrid(self.timetable)
 
     def updateGrid(self, data):
         self.grdSchedule.Rows.Clear()
@@ -205,7 +260,9 @@ class ScheduleGenerationForm(Form):
 
             self.grdSchedule.Rows.Add(row)
             self.grdSchedule.Rows[x].HeaderCell.Value = rowNames[x]
-
+            style = DataGridViewCellStyle()
+            style.Font = Font("Open Sans", 10)
+            self.grdSchedule.Rows[x].DefaultCellStyle = style
 
     def retrieveClassSlot(self, code):
         for timetableClass in self.classes:
