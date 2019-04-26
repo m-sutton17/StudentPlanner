@@ -55,7 +55,7 @@ class MainMenuForm(Form):
         self.infoPanel.Size = Size(400, 200)
         # info label
         self.lblInfo = Label()
-        self.lblInfo.Text = 'Welcome.\nThis schedule generator will help organise your educational and free time effectively. Simply enter your timetable in the Timetable Input section and select it when generating a schedule. '   \
+        self.lblInfo.Text = 'Welcome.\nThis schedule generator will help organise your educational and free time effectively. Enter your timetable in the Timetable Input section and select it when generating a schedule. '   \
             + 'Before generating, input your desired extra activities in the Event Management section. Then just hit generate and your customised schedule will be created. You can then save this schedule and then export it in the View Schedule section'
         self.lblInfo.Location = Point(10, 10)
         self.lblInfo.Size = Size(380, 180)

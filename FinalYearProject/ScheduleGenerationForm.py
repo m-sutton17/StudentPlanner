@@ -279,6 +279,7 @@ class ScheduleGenerationForm(Form):
         self.cursor.execute(sql)
         results = self.cursor.fetchall()
         self.cbxTimetables.Items.Clear()
+        self.timetables.Clear()
         for row in results:
             self.timetables.Add(row[0])
             self.cbxTimetables.Items.Add(row[1])
@@ -363,11 +364,14 @@ class ScheduleGenerationForm(Form):
 
 # UI events
     def btnSchedulePress(self, sender, args):
-        self.grdSchedule.Rows.Clear()
-
-        self.schedule = self.scheduler.GenerateSchedule()
         
-        self.updateGrid(self.schedule)
+        if (len(self.scheduler.events) > 0 and self.scheduler.timetable.GetLength(0) > 0):
+            self.grdSchedule.Rows.Clear()
+            self.schedule = self.scheduler.GenerateSchedule()
+            if (self.schedule is not None):
+                self.updateGrid(self.schedule)
+        
+        
         #row = Array.CreateInstance(str, self.schedule.GetLength(1))
         #for x in range(self.schedule.GetLength(0)):
         #    for y in range(self.schedule.GetLength(1)):
@@ -376,15 +380,16 @@ class ScheduleGenerationForm(Form):
         #    self.grdSchedule.Rows.Add(row)
 
     def saveSchedulePressed(self, sender, args):
-        code = self.generateScheduleCode()
-        name = self.tbxScheduleName.Text
-        sql = """
-                INSERT INTO FullSchedules
-                VALUES ('""" + str(code) + "','" + str(name) + "'," + self.convertSlotsToSQL() + ")"
+        if (self.tbxScheduleName.Text):
+            code = self.generateScheduleCode()
+            name = self.tbxScheduleName.Text
+            sql = """
+                    INSERT INTO FullSchedules
+                    VALUES ('""" + str(code) + "','" + str(name) + "'," + self.convertSlotsToSQL() + ")"
               
-        self.cursor.execute(sql)
-        self.conn.commit()
-        self.fillTimetableList()
+            self.cursor.execute(sql)
+            self.conn.commit()
+            self.fillTimetableList()
 
     def timetableSelectionChanged(self, sender, args):
         self.displaySavedTimetable(self.cbxTimetables.SelectedIndex)

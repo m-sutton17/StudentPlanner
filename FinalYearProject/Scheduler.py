@@ -8,6 +8,7 @@ class Scheduler(object):
          self.world = None
          self.dayLimit = 4
          self.restrictionLevel = 0
+         self.timetable = Array.CreateInstance(str,0,0)
 
      def GenerateSchedule(self):
          self.world = World(self.events, self.timetable)
@@ -21,6 +22,8 @@ class Scheduler(object):
                      print(action.name)
                      if self.checkState():
                         self.world.goalAchieved = True
+                     elif self.world.cycle.value == len(self.world.events * 4):
+                        return None
                      break
          
          
@@ -194,13 +197,17 @@ class Scheduler(object):
             # reset values to reflect next day
             self.world.slot = 0
             self.world.day = self.world.day + 1
-            if (self.world.day == self.dayLimit) :
-                self.world.at.value = 'dn'
+            if (self.world.at.value == 'dx'):
+                if (self.world.day == self.dayLimit) :
+                    self.world.at.value = 'dn'
+                self.world.meetsDayConstraints.value = None
+            elif (self.world.at.value == 'dn') :
+                self.world.meetsDayConstraints.value = False
             self.world.occupiedSlot.value = None
             self.world.selection.value = 't0'
             self.world.meetsTimeConstraints.value = None
             self.world.suitableSlot.value = None
-            self.world.meetsDayConstraints.value = None
+            
          
      
      def ReplaceEvent(self):

@@ -9,6 +9,7 @@ import sqlite3
 
 from System.Drawing import *
 from System.Windows.Forms import *
+from ScheduleGenerationForm import *
 
 from Scheduler import TimetableSlot
 
@@ -386,15 +387,16 @@ class TimetableInputForm(Form):
             print('invalid')
 
     def saveTimetablePressed(self, sender, args):
-        code = self.generateTimetableCode()
-        name = self.tbxTTName.Text
-        sql = """
-                INSERT INTO TimetableSchedules
-                VALUES ('""" + str(code) + "','" + str(name) + "'," + self.convertSlotsToSQL() + ")"
+        if (self.tbxTTName.Text):
+            code = self.generateTimetableCode()
+            name = self.tbxTTName.Text
+            sql = """
+                    INSERT INTO TimetableSchedules
+                    VALUES ('""" + str(code) + "','" + str(name) + "'," + self.convertSlotsToSQL() + ")"
               
-        self.cursor.execute(sql)
-        self.conn.commit()
-        self.fillTimetableList()
+            self.cursor.execute(sql)
+            self.conn.commit()
+            self.fillTimetableList()
 
     def timetableSelectionChanged(self, sender, args):
         self.displaySavedTimetable(self.cbxTimetables.SelectedIndex)
@@ -402,6 +404,10 @@ class TimetableInputForm(Form):
     def exitButtonPressed(self, sender, args):
         #self.callerForm.scheduler.setTimetable(self.timetableArray)
         self.conn.close()
+        try:
+            self.callerForm.fillTimetableList()
+        except:
+            print("Not the correct form")
         self.callerForm.Show()
         self.Close()
 
