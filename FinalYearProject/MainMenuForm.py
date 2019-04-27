@@ -28,6 +28,7 @@ class MainMenuForm(Form):
     def initialiseControls(self):
         self.ClientSize = Size(600, 720);
         self.FormBorderStyle = FormBorderStyle.FixedDialog
+        self.MaximizeBox = False
 
         buttonFont = Font("Open Sans", 18)
         titleFont = Font("Open Sans", 18)
@@ -56,10 +57,11 @@ class MainMenuForm(Form):
         # info label
         self.lblInfo = Label()
         self.lblInfo.Text = 'Welcome.\nThis schedule generator will help organise your educational and free time effectively. Enter your timetable in the Timetable Input section and select it when generating a schedule. '   \
-            + 'Before generating, input your desired extra activities in the Event Management section. Then just hit generate and your customised schedule will be created. You can then save this schedule and then export it in the View Schedule section'
+            + 'Before generating, input your desired extra activities in the Event Management section. Then click generate and your customised schedule will be created. You can then save this schedule and export it in the View Schedule section'
         self.lblInfo.Location = Point(10, 10)
         self.lblInfo.Size = Size(380, 180)
         self.lblInfo.Font = textFont
+        self.lblInfo.TextAlign = ContentAlignment.MiddleCenter
         # add controls to panel
         self.infoPanel.Controls.Add(self.lblInfo)
 

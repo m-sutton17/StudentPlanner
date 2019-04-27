@@ -82,6 +82,7 @@ class ScheduleGenerationForm(Form):
         
         self.ClientSize = Size(1280, 720);
         self.FormBorderStyle = FormBorderStyle.FixedDialog
+        self.MaximizeBox = False
 
         buttonFont = Font("Open Sans", 14)
         buttonSmallFont = Font("Open Sans", 10)
@@ -370,8 +371,12 @@ class ScheduleGenerationForm(Form):
             self.schedule = self.scheduler.GenerateSchedule()
             if (self.schedule is not None):
                 self.updateGrid(self.schedule)
-        
-        
+                MessageBox.Show("Schedule successfully created", "Success", MessageBoxButtons.OK)
+            else:
+                MessageBox.Show("Schedule could not be created", "Unsuccessful", MessageBoxButtons.OK)
+        else:
+            MessageBox.Show("Timetable or events missing. Select a timetable and input events in the event manager to create a schedule", "Missing Data", MessageBoxButtons.OK)
+
         #row = Array.CreateInstance(str, self.schedule.GetLength(1))
         #for x in range(self.schedule.GetLength(0)):
         #    for y in range(self.schedule.GetLength(1)):
@@ -390,6 +395,10 @@ class ScheduleGenerationForm(Form):
             self.cursor.execute(sql)
             self.conn.commit()
             self.fillTimetableList()
+
+            MessageBox.Show("Schedule added", "Success", MessageBoxButtons.OK)
+        else:
+            MessageBox.Show("Enter a name for the schedule", "Invalid", MessageBoxButtons.OK)
 
     def timetableSelectionChanged(self, sender, args):
         self.displaySavedTimetable(self.cbxTimetables.SelectedIndex)

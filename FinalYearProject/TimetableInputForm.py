@@ -40,6 +40,7 @@ class TimetableInputForm(Form):
         
         self.ClientSize = Size(1280, 720);
         self.FormBorderStyle = FormBorderStyle.FixedDialog
+        self.MaximizeBox = False
 
         buttonFont = Font("Open Sans", 14)
         buttonSmallFont = Font("Open Sans", 10)
@@ -383,8 +384,10 @@ class TimetableInputForm(Form):
 
             self.updateGrid()
 
+            MessageBox.Show("Class added", "Success", MessageBoxButtons.OK)
         else:
             print('invalid')
+            MessageBox.Show("Class information missing. Enter a name, room and teacher for the class", "Invalid", MessageBoxButtons.OK)
 
     def saveTimetablePressed(self, sender, args):
         if (self.tbxTTName.Text):
@@ -397,6 +400,10 @@ class TimetableInputForm(Form):
             self.cursor.execute(sql)
             self.conn.commit()
             self.fillTimetableList()
+
+            MessageBox.Show("Timetable added", "Success", MessageBoxButtons.OK)
+        else:
+            MessageBox.Show("Enter a name for the timetable", "Invalid", MessageBoxButtons.OK)
 
     def timetableSelectionChanged(self, sender, args):
         self.displaySavedTimetable(self.cbxTimetables.SelectedIndex)

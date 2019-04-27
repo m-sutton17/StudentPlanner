@@ -48,6 +48,7 @@ class ScheduleDisplayForm(Form):
         
         self.ClientSize = Size(1280, 720);
         self.FormBorderStyle = FormBorderStyle.FixedDialog
+        self.MaximizeBox = False
 
         buttonFont = Font("Open Sans", 14)
         buttonSmallFont = Font("Open Sans", 10)
@@ -92,7 +93,7 @@ class ScheduleDisplayForm(Form):
         self.btnSave.Size = Size(225, 60)
         self.btnSave.Font = buttonFont
         self.btnSave.BackColor = Color.FromArgb(0, 99, 160)
-        #self.btnSave.Click += self.buttonPressed
+        self.btnSave.Click += self.btnSavePress
 
         # export button
         self.btnExport = Button()
@@ -265,12 +266,17 @@ class ScheduleDisplayForm(Form):
         if dialog.ShowDialog() == DialogResult.OK:
             try:
                 bm.Save(dialog.FileName, Drawing.Imaging.ImageFormat.Jpeg)
+                MessageBox.Show("Export successfull", "Success", MessageBoxButtons.OK)
             except IOError, e:
                 print 'An error occured: ', e
+                MessageBox.Show("Export failed", "Error", MessageBoxButtons.OK)
 
 
     def scheduleSelectionChanged(self, sender, args):
         self.displaySavedSchedule(self.cbxSchedules.SelectedIndex)
+
+    def btnSavePress(self, sender, args):
+        MessageBox.Show("Feature not yet implimented", "Error", MessageBoxButtons.OK)
 
 #Application.EnableVisualStyles()
 #Application.SetCompatibleTextRenderingDefault(False)

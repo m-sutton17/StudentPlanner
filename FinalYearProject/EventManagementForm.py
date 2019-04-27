@@ -34,6 +34,7 @@ class EventManagementForm(Form):
 
         self.ClientSize = Size(1280, 720);
         self.FormBorderStyle = FormBorderStyle.FixedDialog
+        self.MaximizeBox = False
 
         buttonFont = Font("Open Sans", 14)
         buttonSmallFont = Font("Open Sans", 10)
@@ -92,6 +93,7 @@ class EventManagementForm(Form):
         self.btnRemove.Size = Size(175, 50)
         self.btnRemove.Font = buttonFont
         self.btnRemove.BackColor = Color.FromArgb(0, 99, 160)
+        self.btnRemove.Click += self.btnRemovePress
 
         # back button
         self.btnBack = Button()
@@ -237,7 +239,7 @@ class EventManagementForm(Form):
         # add panels
         self.Controls.Add(self.mainPanel)
 
-# button events
+# UI events
     def btnAddPress(self, sender, args):
         self.addEvent()
 
@@ -250,6 +252,7 @@ class EventManagementForm(Form):
         self.inputMode = 'add'
         self.editingIndex = -1
         self.clearInputControls()
+        MessageBox.Show("Now in new event mode", "Event Mode", MessageBoxButtons.OK)
         
     def btnEditPress(self, sender, args):
         if (self.lbxEvents.SelectedIndex != -1):
@@ -258,8 +261,13 @@ class EventManagementForm(Form):
             self.inputMode = 'edit'
             self.editingIndex = self.lbxEvents.SelectedIndex
             self.displaySelectedEvent(self.lbxEvents.SelectedIndex)
+            MessageBox.Show("Now in editing event mode", "Event Mode", MessageBoxButtons.OK)
         else:
+            MessageBox.Show("Select an event from the list before selecting edit to modify an event", "Error", MessageBoxButtons.OK)
             print('nothing selected')
+
+    def btnRemovePress(self, sender, args):
+        MessageBox.Show("Feature not yet implimented", "Error", MessageBoxButtons.OK)
 
     def btnExitPress(self, sender, args):
         self.conn.close()
@@ -310,15 +318,20 @@ class EventManagementForm(Form):
             if (self.inputMode == 'add'):
                 #newEvent = Event(name, self.generateEventCode(), days, time)
                 self.events.append(newEventRecord)
+                MessageBox.Show("Event added", "Success", MessageBoxButtons.OK)
                 #self.addEventToDB(newEvent)
             elif (self.inputMode == 'edit' and self.editingIndex != -1):
                 #editEvent = Event(name, self.generateEventCode(), days, time)
                 self.events[self.editingIndex] = newEventRecord
+                MessageBox.Show("Event modified", "Success", MessageBoxButtons.OK)
                 #self.editEventDBEntry(editEvent)
             
             self.addEventToDB(newEventRecord)
             self.displayEvents()
+
+            
         else:
+            MessageBox.Show("Event data misssing: " + invalidReason, "Invalid", MessageBoxButtons.OK)
             print(invalidReason)
 
     def generateEventCode(self):
